@@ -3,6 +3,8 @@ from django.db import models
 from datetime import timedelta
 from django.utils import timezone
 import random as rd
+from django.utils.text import slugify
+
 
 
 # Model to represent Gym Owners
@@ -34,11 +36,18 @@ class Gym(models.Model):
     
     # Name of the gym
     name = models.CharField(max_length=255)
+    slug = models.SlugField(unique=True, blank=True)
     address = models.TextField(blank=True, null=True)
     
     # Link to the GymOwner who owns this gym
     # A GymOwner can own multiple gyms (one-to-many relationship)
-    owner = models.ForeignKey(GymOwner, on_delete=models.CASCADE, related_name='gyms')
+    owners = models.ManyToManyField(GymOwner, related_name='gyms')
+
+    def save(self, *args, **kwargs):
+        # Generate a slug from the gym name
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
     
     def __str__(self):
         # Display the name of the gym
