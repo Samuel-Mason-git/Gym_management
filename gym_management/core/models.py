@@ -34,6 +34,7 @@ class Gym(models.Model):
     
     # Name of the gym
     name = models.CharField(max_length=255)
+    address = models.TextField(blank=True, null=True)
     
     # Link to the GymOwner who owns this gym
     # A GymOwner can own multiple gyms (one-to-many relationship)
