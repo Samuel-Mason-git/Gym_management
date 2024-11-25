@@ -5,7 +5,7 @@ class GymOwnerAdmin(admin.ModelAdmin):
     list_display = ['user', 'contact_number', 'join_date']
 
 class GymAdmin(admin.ModelAdmin):
-    list_display = ['name', 'address', 'get_owners']  # Replace 'owners' with 'get_owners'
+    list_display = ['name', 'address', 'get_owners'] 
     search_fields = ['name']
 
     def get_owners(self, obj):
