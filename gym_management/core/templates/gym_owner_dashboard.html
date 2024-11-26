@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym Owner Dashboard</title>
+</head>
+<body>
+    <h1>Welcome, {{ 'gym_owner_name' }}!</h1>
+    <p>Total Gyms You're Assigned To: {{ gym_count }}</p>
+    <ul>
+        {% for gym in gym_data %}
+            <li>{{ gym.gym_name }} - {{ gym.member_count }} Members</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
