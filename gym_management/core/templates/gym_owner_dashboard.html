@@ -4,24 +4,138 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gym Owner Dashboard</title>
+    <style>
+        /* General body styling */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Container for the content */
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Heading styles */
+        h1 {
+            color: #2d3e50;
+            font-size: 2em;
+            text-align: center;
+        }
+
+        h2 {
+            color: #5c6f77;
+            font-size: 1.4em;
+            margin-bottom: 10px;
+        }
+
+        /* Paragraphs and other text elements */
+        p {
+            font-size: 1em;
+            margin: 5px 0;
+            color: #4f5b66;
+        }
+
+        /* Styling for each gym section */
+        .gym-card {
+            background-color: #fafbfc;
+            border: 1px solid #e0e3e6;
+            border-radius: 8px;
+            padding: 20px;
+            width: auto;
+            margin-right: 2%;
+            margin-bottom: 20px;
+            float: right;
+        }
+
+        .gym-card:hover {
+            background-color: #f1f3f5;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .gym-card strong {
+            display: block;
+            font-size: 1.2em;
+            color: #2d3e50;
+            margin-bottom: 10px;
+        }
+
+        .gym-card ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .gym-card li {
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .gym-card li:last-child {
+            border-bottom: none;
+        }
+
+        /* Button styling */
+        button {
+            padding: 12px 25px;
+            background-color: #d31c1c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #000000;
+        }
+
+        /* Styling for the links (optional) */
+        a {
+            text-decoration: none;
+        }
+
+        #assigned {
+            text-align: center;
+            font-size: 22px;
+        }
+
+
+    </style>
 </head>
 <body>
-    <h1>Welcome, {{ 'gym_owner_name' }}!</h1>
-    <p>Total Gyms You're Assigned To: {{ gym_count }}</p>
+
+    <!-- Main container -->
+    <div class="container">
+        <h1>Welcome, {{ 'gym_owner_name' }}!</h1>
+        <p id="assigned">Total Gyms You're Assigned To: <strong>{{ gym_count }}</strong></p>
 
         {% for gym in gym_data %}
-        <strong>{{ gym.gym_name }}</strong>
-        <ul>
-            <li>
-                <p>Member Count: {{ gym.member_count }}</p>
-            </li>
-            <!-- Button to access check-in page -->
-            <a href="{% url 'gym_checkin' slug=gym.gym_slug %}">
-                <button type="button">Go to Check-in</button>
-            </a>
-        </li>
-    </ul>
-
+        <div class="gym-card">
+            <strong>{{ gym.gym_name }}</strong>
+            <ul>
+                <li>
+                    <p>Member Count: {{ gym.member_count }}</p>
+                </li>
+                <li>
+                    <!-- Button to access check-in page -->
+                    <a href="{% url 'gym_checkin' slug=gym.gym_slug %}">
+                        <button type="button">Go to Check-in</button>
+                    </a>
+                </li>
+            </ul>
+        </div>
         {% endfor %}
+    </div>
+
 </body>
 </html>
