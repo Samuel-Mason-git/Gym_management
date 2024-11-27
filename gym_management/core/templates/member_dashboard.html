@@ -4,11 +4,84 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Member Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        h1, h2, p {
+            color: #333;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .stats {
+            margin-top: 30px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome, {{ member_name }}!</h1>
-    <h2>Your Gym Code: {{ member_code }}</h2>
-    <p>Your Gym: {{ gym_name }}</p>
-    <p>Join Date: {{ join_date }}</p>
+    <div class="container">
+        <h1>Welcome, {{ member_name }}!</h1>
+        <h2>Your Gym Code: {{ member_code }}</h2>
+        <p>Your Gym: {{ gym_name }}</p>
+        <p>Join Date: {{ join_date }}</p>
+
+        <!-- Visit Statistics Section -->
+        <div class="stats">
+            <h3>Visit Information</h3>
+            <p><strong>Number of Visits:</strong> {{ number_of_visits }}</p>
+            <p><strong>Average Session Time:</strong> {{ average_session_time }} minutes</p>
+        </div>
+
+        <!-- Recent Visits Table -->
+        <h3>Recent Visits</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Entry Time</th>
+                    <th>Exit Time</th>
+                    <th>Session Duration</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for visit in recent_visits %}
+                <tr>
+                    <td>{{ visit.entry_time|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        {% if visit.exit_time %}
+                            {{ visit.exit_time|date:"Y-m-d H:i" }}
+                        {% else %}
+                            Not yet exited
+                        {% endif %}
+                    </td>
+                    <td>{{ visit.session_duration }} minutes</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>

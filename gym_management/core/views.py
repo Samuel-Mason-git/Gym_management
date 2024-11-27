@@ -82,12 +82,27 @@ def member_dashboard(request):
     user = request.user
     try:
         member = Member.objects.get(user=user)        
+
+        # Get number of visits and average session time
+        number_of_visits = Visit.get_number_of_visits(member)
+        average_session_time = Visit.get_average_session_time(member)
+        recent_visits = Visit.objects.filter(member=member).order_by('-entry_time')[:5]
+
+        for visit in recent_visits:
+            if visit.exit_time:
+                visit.session_duration = round(((visit.exit_time - visit.entry_time).total_seconds() / 60), 2)  # in minutes
+            else:
+                visit.session_duration = '--'
+
         context = {
             'role': 'Member',
             'gym_name': member.gym.name,
             'join_date': member.join_date,
             'member_code': member.gym_code if member.gym_code else "No code assigned",
             'member_name': user.get_full_name().capitalize() or user.username.capitalize(),
+            'number_of_visits': number_of_visits,
+            'average_session_time': average_session_time,
+            'recent_visits': recent_visits,
         }
         return render(request, 'member_dashboard.html', context)
     except Member.DoesNotExist:

@@ -4,7 +4,7 @@ from datetime import timedelta
 from django.utils import timezone
 import random as rd
 from django.utils.text import slugify
-
+from django.utils.timezone import now
 
 
 # Model to represent Gym Owners
@@ -124,3 +124,26 @@ class Visit(models.Model):
                 self.exit_time = self.entry_time + self.default_exit_duration
                 self.has_exit = True
                 self.save()
+
+    @classmethod
+    def get_number_of_visits(cls, member):
+        """Calculate the number of visits a member has made (completed visits)."""
+        return cls.objects.filter(member=member, exit_time__isnull=False).count()
+    
+    @classmethod
+    def get_average_session_time(cls, member):
+        """Calculate the average session time for a member."""
+        visits = cls.objects.filter(member=member, exit_time__isnull=False)
+        total_session_time = timedelta(seconds=0)
+        valid_visits_count = 0
+
+        for visit in visits:
+            exit_time = visit.exit_time or (visit.entry_time + visit.default_exit_duration)
+            total_session_time += (exit_time - visit.entry_time)
+            valid_visits_count += 1
+
+        if valid_visits_count > 0:
+            # Calculate average session time (in minutes)
+            average_session_time = total_session_time / valid_visits_count
+            return round((average_session_time.total_seconds() / 60),2)  # Convert to minutes
+        return 0  # No visits, return 0 minute
