@@ -96,6 +96,10 @@ class Member(models.Model):
         return self.user.username
 
 
+
+
+
+
 # Model to represent visiting database
 class Visit(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='visits')
@@ -110,6 +114,13 @@ class Visit(models.Model):
     default_exit_duration = timedelta(hours=1, minutes=12)
 
     # The threshold duration to apply the default exit time if the user doesn't log their exit
-    default_exit_threshold = timedelta(hours=4, minutes=0)
+    default_exit_threshold = timedelta(hours=4)
 
-    # Add in exit handinling with automated checks to see if a user has not signed out
+    def auto_exit(self):
+        """Set exit_time automatically if overdue."""
+        if not self.exit_time and not self.has_exit:
+            elapsed_time = now() - self.entry_time
+            if elapsed_time > self.default_exit_threshold:
+                self.exit_time = self.entry_time + self.default_exit_duration
+                self.has_exit = True
+                self.save()

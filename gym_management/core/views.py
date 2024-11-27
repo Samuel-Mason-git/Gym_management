@@ -1,9 +1,11 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import GymOwner, Member
+from .models import GymOwner, Member, Visit, Gym
+from .forms import GymCodeForm
+from django.utils.timezone import now
 
 # Login View with conditional dashboard redirecting dependant on what status a user account is
 def login_view(request):
@@ -77,11 +79,13 @@ def gym_owner_dashboard(request):
 def member_dashboard(request):
     user = request.user
     try:
-        member = Member.objects.get(user=user)
+        member = Member.objects.get(user=user)        
         context = {
             'role': 'Member',
             'gym_name': member.gym.name,
             'join_date': member.join_date,
+            'member_code': member.gym_code if member.gym_code else "No code assigned",
+            'member_name': user.get_full_name().capitalize() or user.username.capitalize(),
         }
         return render(request, 'member_dashboard.html', context)
     except Member.DoesNotExist:
@@ -89,19 +93,36 @@ def member_dashboard(request):
         return redirect('login')
 
 
+# Gym checkin View (the render for the check-in page for each gym)
+def gym_checkin_view(request, slug):
+    # Fetch gym by its slug
+    gym = get_object_or_404(Gym, slug=slug)
 
-
-# Signup function request
-def signup_view(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = GymCodeForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Your account has been created successfully.')
-            return redirect('login')  # Redirect to login page after successful signup
-        else:
-            messages.error(request, 'Please correct the errors below.')
-    else:
-        form = UserCreationForm()
+            gym_code = form.cleaned_data['gym_code']
+            try:
+                member = Member.objects.get(gym_code=gym_code, gym=gym)
 
-    return render(request, 'signup.html', {'form': form})
+                # Check if the member already has an active visit
+                active_visit = Visit.objects.filter(member=member, exit_time__isnull=True).first()
+                if active_visit:
+                    # Log the exit for the active visit
+                    active_visit.exit_time = now()
+                    active_visit.has_exit = True
+                    active_visit.save()
+                    messages.success(request, f"Goodbye {member.user.username}, you are signed out!")
+                else:
+                    # Create a new visit entry
+                    Visit.objects.create(member=member, gym_code=gym_code)
+                    messages.success(request, f"Welcome {member.user.username}, you are signed in!")
+            except Member.DoesNotExist:
+                messages.error(request, "Invalid gym code or you are not associated with this gym.")
+        else:
+            messages.error(request, "Form submission error.")
+    else:
+        form = GymCodeForm()
+
+    return render(request, 'gym_checkin.html', {'form': form, 'gym': gym})
+
