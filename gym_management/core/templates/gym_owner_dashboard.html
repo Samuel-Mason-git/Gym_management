@@ -8,10 +8,20 @@
 <body>
     <h1>Welcome, {{ 'gym_owner_name' }}!</h1>
     <p>Total Gyms You're Assigned To: {{ gym_count }}</p>
-    <ul>
+
         {% for gym in gym_data %}
-            <li>{{ gym.gym_name }} - {{ gym.member_count }} Members</li>
-        {% endfor %}
+        <strong>{{ gym.gym_name }}</strong>
+        <ul>
+            <li>
+                <p>Member Count: {{ gym.member_count }}</p>
+            </li>
+            <!-- Button to access check-in page -->
+            <a href="{% url 'gym_checkin' slug=gym.gym_slug %}">
+                <button type="button">Go to Check-in</button>
+            </a>
+        </li>
     </ul>
+
+        {% endfor %}
 </body>
 </html>

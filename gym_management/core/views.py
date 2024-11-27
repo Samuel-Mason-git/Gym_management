@@ -55,9 +55,11 @@ def gym_owner_dashboard(request):
         gym_data = []
         for gym in gyms:
             member_count = gym.members.count()
+            slug = gym.slug
             gym_data.append({
                 'gym_name': gym.name,
                 'member_count': member_count,
+                'gym_slug': slug
             })
         
         
@@ -97,6 +99,11 @@ def member_dashboard(request):
 def gym_checkin_view(request, slug):
     # Fetch gym by its slug
     gym = get_object_or_404(Gym, slug=slug)
+
+    # Check if logged in user is not the gym owner
+    if not gym.owners.filter(user=request.user).exists():
+        messages.error(request, "You are not authorized to access the check in page to this gym.")
+        return redirect('login')
 
     if request.method == 'POST':
         form = GymCodeForm(request.POST)
