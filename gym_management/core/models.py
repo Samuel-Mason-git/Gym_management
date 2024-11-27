@@ -147,3 +147,27 @@ class Visit(models.Model):
             average_session_time = total_session_time / valid_visits_count
             return round((average_session_time.total_seconds() / 60),2)  # Convert to minutes
         return 0  # No visits, return 0 minute
+    
+
+    @classmethod
+    def get_number_of_visits_per_gym(cls, gym):
+        """Calculate the number of visits a member has made (completed visits)."""
+        return cls.objects.filter(member__gym=gym, exit_time__isnull=False).count()
+    
+    @classmethod
+    def get_average_session_time_per_gym(cls, gym):
+        """Calculate the average session time for a member."""
+        visits = cls.objects.filter(member__gym=gym, exit_time__isnull=False)
+        total_session_time = timedelta(seconds=0)
+        valid_visits_count = 0
+
+        for visit in visits:
+            exit_time = visit.exit_time or (visit.entry_time + visit.default_exit_duration)
+            total_session_time += (exit_time - visit.entry_time)
+            valid_visits_count += 1
+
+        if valid_visits_count > 0:
+            # Calculate average session time (in minutes)
+            average_session_time = total_session_time / valid_visits_count
+            return round((average_session_time.total_seconds() / 60),2)  # Convert to minutes
+        return 0  # No visits, return 0 minute

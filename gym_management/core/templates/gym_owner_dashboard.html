@@ -132,6 +132,12 @@
                         <button type="button">Go to Check-in</button>
                     </a>
                 </li>
+                <li>
+                    <!-- Button to access dashboard page -->
+                    <a href="{% url 'gym_dashboard' slug=gym.gym_slug %}">
+                        <button type="button">Go to Dashboard</button>
+                    </a>
+                </li>
             </ul>
         </div>
         {% endfor %}

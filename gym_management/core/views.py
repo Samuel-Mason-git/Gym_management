@@ -6,6 +6,9 @@ from django.contrib.auth.decorators import login_required
 from .models import GymOwner, Member, Visit, Gym
 from .forms import GymCodeForm
 from django.utils.timezone import now
+from django.utils import timezone
+from django.db.models import Count
+
 
 # Login View with conditional dashboard redirecting dependant on what status a user account is
 def login_view(request):
@@ -148,3 +151,47 @@ def gym_checkin_view(request, slug):
 
     return render(request, 'gym_checkin.html', {'form': form, 'gym': gym})
 
+
+
+# Gym Dashboard Page
+@login_required
+def gym_dashboard(request, slug):
+    # Fetch gym by its slug
+    user = request.user
+    gym = get_object_or_404(Gym, slug=slug)
+    # Check if logged in user is not the gym owner
+    try:
+        # Fetch the gym owner object
+        gym_owner = GymOwner.objects.get(user=user)
+        if gym not in gym_owner.gyms.all():
+            messages.error(request, "You are not authorized to access this gym's dashboard.")
+            return redirect('login')
+    # If it fails
+    except GymOwner.DoesNotExist:
+        messages.error(request, "You are not authorized to access the dashboard of this gym.")
+        return redirect('login')
+
+    # Metrics for Gym Dashboard
+    member_count = gym.members.count()
+    total_visits = Visit.get_number_of_visits_per_gym(gym)
+    today_visits = Visit.objects.filter(member__gym=gym, entry_time__date=timezone.now().date()).count()
+    avg_session_time = Visit.get_average_session_time_per_gym(gym) 
+
+    top_visitors = (
+        Visit.objects.filter(member__gym=gym, exit_time__isnull=False)
+        .values('member__user__username', 'member__gym_code') 
+        .annotate(visit_count=Count('id'))  
+        .order_by('-visit_count')  
+        )[:5]  
+
+
+    context = {
+        'gym_name': gym.name,
+        'member_count': member_count,
+        'total_visits': total_visits,
+        'today_visits': today_visits,
+        'avg_session_time': avg_session_time,
+        'top_visitors': top_visitors,
+    }
+    
+    return render(request, 'gym_dashboard.html', context)  
