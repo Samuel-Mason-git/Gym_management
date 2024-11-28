@@ -22,7 +22,7 @@
 
         <!-- Metrics Section -->
         <div class="row text-center mb-5">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <h5 class="card-title">Total Members</h5>
@@ -30,7 +30,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <h5 class="card-title">Total Visits</h5>
@@ -38,11 +38,19 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <h5 class="card-title">Visits Today</h5>
                         <p class="display-4">{{ today_visits }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Avg Session Time</h5>
+                        <p class="display-4">{{ avg_session_time }}M</p>
                     </div>
                 </div>
             </div>
@@ -79,7 +87,7 @@
 
         <!-- Footer Section -->
         <footer class="mt-5 text-center">
-            <p>&copy; {{ gym_name }} Dashboard - All Rights Reserved</p>
+            <p>&copy; SRM Development Dashboard - All Rights Reserved</p>
         </footer>
     </div>
 

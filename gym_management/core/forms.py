@@ -1,4 +1,5 @@
 from django import forms
+from .models import Member
 
 
 # Gym Code Login Form
@@ -7,3 +8,5 @@ class GymCodeForm(forms.Form):
         'placeholder': 'Enter your gym code',
         'class': 'form-control'
     }))
+
+

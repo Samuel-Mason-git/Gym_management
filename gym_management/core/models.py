@@ -72,7 +72,7 @@ class Member(models.Model):
     # Optional personal information for the member
     date_of_birth = models.DateField(null=True, blank=True)  # Optional date of birth
     address = models.TextField(blank=True, null=True)  # Optional address field
-
+    active = models.BooleanField(default=False)
     join_date = models.DateField(auto_now_add=True)  # Automatically set when the member is created
 
     # Unique Gym Code for Sign in
