@@ -5,6 +5,7 @@ from django.utils import timezone
 import random as rd
 from django.utils.text import slugify
 from django.utils.timezone import now
+from django.contrib.auth.forms import PasswordChangeForm
 
 
 # Model to represent Gym Owners

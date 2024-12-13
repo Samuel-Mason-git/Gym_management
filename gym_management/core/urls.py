@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views 
-from .views import gym_checkin_view, gym_dashboard
+from .views import gym_checkin_view, gym_dashboard, member_update_view
 
 urlpatterns = [
     path('login/', views.login_view, name='login'),
@@ -8,4 +8,5 @@ urlpatterns = [
     path('member-dashboard/', views.member_dashboard, name='member_dashboard'),
     path('<slug:slug>/check-in/', gym_checkin_view, name='gym_checkin'),
     path('<slug:slug>/dashboard/', gym_dashboard, name='gym_dashboard'),
+    path('/member-update-info/', member_update_view, name='member_update_view'),
 ]

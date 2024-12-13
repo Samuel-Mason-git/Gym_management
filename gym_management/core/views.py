@@ -1,13 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordChangeForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .models import GymOwner, Member, Visit, Gym
-from .forms import GymCodeForm
+from .forms import GymCodeForm, MemberUpdateForm
 from django.utils.timezone import now
 from django.utils import timezone
 from django.db.models import Count
+from django.contrib.auth import update_session_auth_hash
 
 
 # Login View with conditional dashboard redirecting dependant on what status a user account is
@@ -195,3 +196,42 @@ def gym_dashboard(request, slug):
     }
     
     return render(request, 'gym_dashboard.html', context)  
+
+
+
+# Member details update form
+@login_required
+def member_update_view(request):
+    user = request.user
+    try:
+        member = Member.objects.get(user=user)
+    except Member.DoesNotExist:
+        messages.error(request, "No member profile found.")
+        return redirect('member_dashboard')
+
+    if request.method == "POST":
+        # Create the forms with POST data and associate the user instance
+        profile_form = MemberUpdateForm(request.POST, instance=member, user=user)
+        password_form = PasswordChangeForm(user=user, data=request.POST)
+
+        if profile_form.is_valid() and password_form.is_valid():
+            # Save profile and password only if the form is valid
+            profile_form.save()
+            password_form.save()
+
+            # Keep the user logged in after password change
+            update_session_auth_hash(request, user)
+
+            messages.success(request, "Your profile and password have been updated successfully.")
+            return redirect('member_dashboard')
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        # Initialize forms with existing member data
+        profile_form = MemberUpdateForm(instance=member, user=user)
+        password_form = PasswordChangeForm(user=user)
+
+    return render(request, 'member_update.html', {
+        'profile_form': profile_form,
+        'password_form': password_form,
+    })
