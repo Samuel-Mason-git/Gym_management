@@ -1,4 +1,15 @@
-Add in gym owner update profile section for gym owners to update their profiles.
 Make a recursive function that will auto mark unclosed gym sessions. 
 Add in a way for gym owners to edit their members.
 Add in a way for gym members to delete their profiles if they wish.
+
+Add in models for subscription information for gym members:
+Type of membership
+Subscription start date
+Subscription status
+Billing Date
+Payment Frequency (e.g., monthly, yearly)
+Number of renewals
+Total amount paid
+Payment Method (e.g., card, bank transfer)
+Status of Current Payment (Paid, Due, Overdue)
+

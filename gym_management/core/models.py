@@ -15,8 +15,7 @@ class GymOwner(models.Model):
     
     # Mandatory personal information
     contact_number = models.CharField(max_length=15)
-
-
+    
     # Additional Optional personal information for the gym owner
     date_of_birth = models.DateField(null=True, blank=True)  
     address = models.TextField(blank=True, null=True) 
