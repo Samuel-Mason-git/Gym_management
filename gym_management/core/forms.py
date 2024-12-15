@@ -18,18 +18,18 @@ class MemberUpdateForm(forms.ModelForm):
         max_length=30,
         required=False,  # Make the field optional
         label='First Name',
-        help_text="Enter your first name or leave blank if unchanged."
+        help_text="Enter your first name or leave unchanged."
     )
     last_name = forms.CharField(
         max_length=30,
         required=False,  # Make the field optional
         label='Last Name',
-        help_text="Enter your last name or leave blank if unchanged."
+        help_text="Enter your last name or leave unchanged."
     )
     email = forms.EmailField(
         required=False,  # Make the field optional
         label="Email",
-        help_text="Ensure this is a valid email address."
+        help_text="Ensure this is your valid email address."
     )
 
     class Meta:
@@ -40,9 +40,9 @@ class MemberUpdateForm(forms.ModelForm):
             'address': forms.Textarea(attrs={'rows': 3}),
         }
         help_texts = {
-            'contact_number': "Enter your phone number in the format: +123456789.",
+            'contact_number': "Enter your phone number.",
             'date_of_birth': "Use the format YYYY-MM-DD.",
-            'address': "Enter your current residential address.",
+            'address': "Enter your current address.",
         }
 
     def __init__(self, *args, **kwargs):
@@ -54,13 +54,6 @@ class MemberUpdateForm(forms.ModelForm):
             self.fields['first_name'].initial = user.first_name
             self.fields['last_name'].initial = user.last_name
             self.fields['email'].initial = user.email
-
-    def clean_email(self):
-        email = self.cleaned_data['email']
-        # Ensure the email is unique, excluding the current user's email
-        if email and User.objects.filter(email=email).exclude(pk=self.instance.user.pk).exists():
-            raise forms.ValidationError("This email address is already in use.")
-        return email
 
     def save(self, commit=True):
         member = super().save(commit=False)

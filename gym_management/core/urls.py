@@ -8,5 +8,5 @@ urlpatterns = [
     path('member-dashboard/', views.member_dashboard, name='member_dashboard'),
     path('<slug:slug>/check-in/', gym_checkin_view, name='gym_checkin'),
     path('<slug:slug>/dashboard/', gym_dashboard, name='gym_dashboard'),
-    path('/member-update-info/', member_update_view, name='member_update_view'),
+    path('member-update-info/', views.member_update_view, name='member_update_view'),
 ]

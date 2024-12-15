@@ -210,28 +210,14 @@ def member_update_view(request):
         return redirect('member_dashboard')
 
     if request.method == "POST":
-        # Create the forms with POST data and associate the user instance
-        profile_form = MemberUpdateForm(request.POST, instance=member, user=user)
-        password_form = PasswordChangeForm(user=user, data=request.POST)
-
-        if profile_form.is_valid() and password_form.is_valid():
-            # Save profile and password only if the form is valid
-            profile_form.save()
-            password_form.save()
-
-            # Keep the user logged in after password change
-            update_session_auth_hash(request, user)
-
-            messages.success(request, "Your profile and password have been updated successfully.")
+        form = MemberUpdateForm(request.POST, instance=member, user=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your information has been updated successfully.")
             return redirect('member_dashboard')
         else:
             messages.error(request, "Please correct the errors below.")
     else:
-        # Initialize forms with existing member data
-        profile_form = MemberUpdateForm(instance=member, user=user)
-        password_form = PasswordChangeForm(user=user)
+        form = MemberUpdateForm(instance=member, user=user)
 
-    return render(request, 'member_update.html', {
-        'profile_form': profile_form,
-        'password_form': password_form,
-    })
+    return render(request, 'member_update.html', {'form': form})
