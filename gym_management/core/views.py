@@ -209,15 +209,31 @@ def member_update_view(request):
         messages.error(request, "No member profile found.")
         return redirect('member_dashboard')
 
-    if request.method == "POST":
-        form = MemberUpdateForm(request.POST, instance=member, user=user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Your information has been updated successfully.")
-            return redirect('member_dashboard')
-        else:
-            messages.error(request, "Please correct the errors below.")
-    else:
-        form = MemberUpdateForm(instance=member, user=user)
+    # Initialise forms
+    profile_form = MemberUpdateForm(instance=member, user=user)
+    password_form = PasswordChangeForm(user=user)
 
-    return render(request, 'member_update.html', {'form': form})
+    if request.method == "POST":
+        if 'profile_submit' in request.POST:  # Profile form submission
+            profile_form = MemberUpdateForm(request.POST, instance=member, user=user)
+            if profile_form.is_valid():
+                profile_form.save()
+                messages.success(request, "Your profile has been updated successfully.")
+                return redirect('member_update_view')
+            else:
+                messages.error(request, "Please correct the errors in the profile form.")
+
+        elif 'password_submit' in request.POST:  # Password form submission
+            password_form = PasswordChangeForm(user=user, data=request.POST)
+            if password_form.is_valid():
+                password_form.save()
+                update_session_auth_hash(request, user)  # Keep user logged in
+                messages.success(request, "Your password has been updated successfully.")
+                return redirect('member_update_view')
+            else:
+                messages.error(request, "Please correct the errors in the password form.")
+
+    return render(request, 'member_update.html', {
+        'profile_form': profile_form,
+        'password_form': password_form,
+    })
