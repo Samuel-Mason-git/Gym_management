@@ -1,5 +1,5 @@
 from django import forms
-from .models import Member
+from .models import Member, Gym
 from django.contrib.auth.models import User
 
 # Gym Code Login Form
@@ -68,3 +68,16 @@ class MemberUpdateForm(forms.ModelForm):
             user.save()
             member.save()
         return member
+    
+
+
+
+# Form for updating gym information
+class GymUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Gym
+        fields = ['name', 'address']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }

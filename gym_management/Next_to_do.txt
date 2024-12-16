@@ -1,3 +1,6 @@
+Fix the gym settings to manage gym owners, add owners and remove them too.
+
+
 Make a recursive function that will auto mark unclosed gym sessions. 
 Add in a way for gym owners to edit their members.
 Add in a way for gym members to delete their profiles if they wish.

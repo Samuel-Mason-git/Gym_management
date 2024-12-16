@@ -10,4 +10,5 @@ urlpatterns = [
     path('<slug:slug>/dashboard/', views.gym_dashboard, name='gym_dashboard'),
     path('member-update-info/', views.member_update_view, name='member_update_view'),
     path('gym-owner-update-info/', views.gym_owner_update_view, name='gym_owner_update_view'),
+    path('<slug:slug>/settings/', views.gym_settings, name='gym_settings'),
 ]
