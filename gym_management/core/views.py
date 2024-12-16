@@ -301,9 +301,6 @@ def gym_owner_update_view(request):
 def gym_settings(request, slug):
     # Ensure the user is an owner of the gym
     gym = get_object_or_404(Gym, slug=slug, owners__user=request.user)
-    
-    # Get all gym owners
-    owners = gym.owners.all()  # This fetches all owners related to the gym
 
     if request.method == 'POST':
         # Handle the gym update form
@@ -315,32 +312,6 @@ def gym_settings(request, slug):
         else:
             messages.error(request, 'Please correct the errors below.')
 
-        # Handle adding a new owner
-        if 'add_owner' in request.POST:
-            owner_username = request.POST.get('owner_username')
-            try:
-                new_owner = User.objects.get(username=owner_username)
-                if new_owner not in gym.owners.all():
-                    gym_owner = GymOwner.objects.create(user=new_owner)
-                    gym.owners.add(gym_owner)
-                    messages.success(request, f'{new_owner.username} added as gym owner!')
-                else:
-                    messages.warning(request, f'{new_owner.username} is already an owner!')
-            except User.DoesNotExist:
-                messages.error(request, 'User not found.')
-
-        # Handle removing an owner
-        if 'remove_owner' in request.POST:
-            owner_id = request.POST.get('owner_id')
-            owner = GymOwner.objects.get(id=owner_id)
-            if owner in gym.owners.all():
-                gym.owners.remove(owner)
-                messages.success(request, f'{owner.user.username} removed from gym owners.')
-            else:
-                messages.error(request, f'{owner.user.username} is not an owner of this gym.')
-        
-        return redirect('gym_settings', slug=slug)
-
     else:
         form = GymUpdateForm(instance=gym)
 
@@ -348,5 +319,4 @@ def gym_settings(request, slug):
         'form': form,
         'gym': gym,
         'gym_slug': slug,
-        'owners': owners,
     })

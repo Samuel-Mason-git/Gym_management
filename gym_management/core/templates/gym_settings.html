@@ -3,45 +3,33 @@
 {% block title %}Gym Settings{% endblock %}
 
 {% block content %}
+<h1>{{ gym.name }} Settings</h1>
+
 <div class="container mt-5">
-    <h1>{{ gym.name }} Settings</h1>
-
-    <h2>Gym Details</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Update Gym Information</button>
-    </form>
-
-    <hr>
-
-    <h2>Manage Gym Owners</h2>
-    <ul class="list-group">
-        {% for owner in owners %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            {{ owner.username }}
-            <form method="post" class="d-inline-block ms-3">
-                {% csrf_token %}
-                <input type="hidden" name="remove_owner" value="1">
-                <input type="hidden" name="owner_id" value="{{ owner.id }}">
-                <button type="submit" class="btn btn-sm btn-danger" {% if owner.id == user.id %}disabled{% endif %}>Remove</button>
-            </form>
-        </li>
-        {% empty %}
-        <li class="list-group-item">No owners found.</li>
-        {% endfor %}
-    </ul>
-
-    <hr>
-
-    <h3>Add a New Owner</h3>
-    <form method="post">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label for="owner_username" class="form-label">Owner Username</label>
-            <input type="text" class="form-control" id="owner_username" name="owner_username" required>
+    <!-- Card for Gym Information -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Gym Basic Information</h2>
         </div>
-        <button type="submit" name="add_owner" class="btn btn-success">Add Owner</button>
-    </form>
+        <div class="card-body">
+            <!-- Display success and error messages -->
+            {% if messages %}
+            <div class="alert-container">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} mt-3" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Gym information form -->
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary mt-3">Update Gym Information</button>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}
