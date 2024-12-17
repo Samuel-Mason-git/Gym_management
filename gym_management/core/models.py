@@ -21,7 +21,9 @@ class GymOwner(models.Model):
     date_of_birth = models.DateField(null=True, blank=True)  
     address = models.TextField(blank=True, null=True) 
 
+    # Auto Assigned
     join_date = models.DateField(auto_now_add=True)  # Automatically set when the owner is created
+    is_primary_owner = models.BooleanField(default=False)  # Track if this is the paying, primary owner
 
     def __str__(self):
         # Display the username of the gym owner
@@ -41,7 +43,7 @@ class Gym(models.Model):
     address = models.TextField(blank=True, null=True)
     contact_number = models.CharField(max_length=15, null=True)
     email = models.EmailField(max_length=255, blank=True, null=True)
-
+    primary_owner = models.ForeignKey(GymOwner, related_name='primary_own', on_delete=models.CASCADE)
 
     # Link to the GymOwner who owns this gym
     # A GymOwner can own multiple gyms (one-to-many relationship)
@@ -149,7 +151,7 @@ class Visit(models.Model):
         if valid_visits_count > 0:
             # Calculate average session time (in minutes)
             average_session_time = total_session_time / valid_visits_count
-            return round((average_session_time.total_seconds() / 60),2)  # Convert to minutes
+            return round((average_session_time.total_seconds() / 60))  # Convert to minutes
         return 0  # No visits, return 0 minute
     
 
