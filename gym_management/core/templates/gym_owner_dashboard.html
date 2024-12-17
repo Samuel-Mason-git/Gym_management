@@ -13,7 +13,10 @@
         <strong>{{ gym.gym_name }}</strong>
         <ul>
             <li>
-                <p>Member Count: {{ gym.member_count }}</p>
+                <p>All Time Members: {{ gym.member_count }}</p>
+            </li>
+            <li>
+                <p>Active Members: {{ gym.active_members }}</p>
             </li>
             <li>
                 <!-- Button to access dashboard page -->
@@ -25,4 +28,7 @@
     </div>
     {% endfor %}
 </div>
+
+
+
 {% endblock %}

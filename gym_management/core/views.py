@@ -62,10 +62,12 @@ def gym_owner_dashboard(request):
         for gym in gyms:
             member_count = gym.members.count()
             slug = gym.slug
+            active_members_count = Member.objects.filter(gym=gym, active=True).count()
             gym_data.append({
                 'gym_name': gym.name,
                 'member_count': member_count,
-                'gym_slug': slug
+                'gym_slug': slug,
+                'active_members': active_members_count,
             })
         
         
@@ -133,6 +135,11 @@ def gym_checkin_view(request, slug):
             try:
                 member = Member.objects.get(gym_code=gym_code, gym=gym)
 
+                # Check if the member's subscription is active
+                if not member.active:  
+                    messages.error(request, f"Your subscription is inactive {member.user.first_name}, you cant Check-in right now.")
+                    return redirect('gym_checkin', slug=slug)
+
                 # Check if the member already has an active visit
                 active_visit = Visit.objects.filter(member=member, exit_time__isnull=True).first()
                 if active_visit:
@@ -140,11 +147,11 @@ def gym_checkin_view(request, slug):
                     active_visit.exit_time = now()
                     active_visit.has_exit = True
                     active_visit.save()
-                    messages.success(request, f"Goodbye {member.user.username}, you are signed out!")
+                    messages.success(request, f"Goodbye {member.user.first_name}, you are signed out!")
                 else:
                     # Create a new visit entry
                     Visit.objects.create(member=member, gym_code=gym_code)
-                    messages.success(request, f"Welcome {member.user.username}, you are signed in!")
+                    messages.success(request, f"Welcome {member.user.first_name}, you are signed in!")
             except Member.DoesNotExist:
                 messages.error(request, "Invalid gym code or you are not associated with this gym.")
         else:
@@ -176,6 +183,9 @@ def gym_dashboard(request, slug):
 
     # Metrics for Gym Dashboard
     member_count = gym.members.count()
+    active_members_count = Member.objects.filter(gym=gym, active=True).count()
+    inactive_members_count = Member.objects.filter(gym=gym, active=False).count()
+
     total_visits = Visit.get_number_of_visits_per_gym(gym)
     today_visits = Visit.objects.filter(member__gym=gym, entry_time__date=timezone.now().date()).count()
     avg_session_time = Visit.get_average_session_time_per_gym(gym) 
@@ -208,6 +218,8 @@ def gym_dashboard(request, slug):
         'top_visitors': top_visitors,
         'gym_slug': slug,
         'recent_visits': recent_visits,
+        'active_members': active_members_count,
+        'inactive_members': inactive_members_count,
     }
     
     return render(request, 'gym_dashboard.html', context)  
@@ -301,9 +313,12 @@ def gym_owner_update_view(request):
 def gym_settings(request, slug):
     # Ensure the user is an owner of the gym
     gym = get_object_or_404(Gym, slug=slug, owners__user=request.user)
+    owners = gym.owners.all()
+    total_admins = owners.count()
+
 
     if request.method == 'POST':
-        # Handle the gym update form
+        # Handle the gym basic information update form
         form = GymUpdateForm(request.POST, instance=gym)
         if form.is_valid():
             form.save()
@@ -319,4 +334,6 @@ def gym_settings(request, slug):
         'form': form,
         'gym': gym,
         'gym_slug': slug,
+        'gym_owners': owners,
+        'total_gym_admins': total_admins,
     })

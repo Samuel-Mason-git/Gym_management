@@ -31,5 +31,23 @@
             </form>
         </div>
     </div>
+
+    <!-- Add spacing between the cards -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h2>Registered Admins</h2>
+        </div>
+        <div class="card-body">
+            <h4>Total Admins: {{ total_gym_admins }}</h4>
+            <ul>
+                {% for gym_owner in gym_owners %}
+                    <li>{{ gym_owner.user.get_full_name }}</li>
+                {% empty %}
+                    <li>No owners found for this gym.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
 </div>
 {% endblock %}

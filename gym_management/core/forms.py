@@ -80,12 +80,12 @@ class GymUpdateForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'contact_number': forms.TextInput(attrs={'class': 'form-control'}),  # Added class for contact number
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),  # Added class for email
+            'contact_number': forms.TextInput(attrs={'class': 'form-control'}),  
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),  
         }
         labels = {
             'name': 'Gym Name',
             'address': 'Gym Location',
-            'contact_number': 'Contact Number',  # Custom label
-            'email': 'Email Address',  # Custom label
+            'contact_number': 'Gym Contact Number',  
+            'email': 'Gym Email Address',  
         }
