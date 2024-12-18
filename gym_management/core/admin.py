@@ -4,10 +4,22 @@ from .models import GymOwner, GymOwnership, Gym, Member, Visit
 # Admin configuration for GymOwner
 @admin.register(GymOwner)
 class GymOwnerAdmin(admin.ModelAdmin):
-    list_display = ('user', 'contact_number', 'join_date', 'is_primary_owner')
-    search_fields = ('user__username', 'contact_number')
-    list_filter = ('join_date', 'is_primary_owner')
+    list_display = ('user', 'first_name', 'last_name', 'email', 'contact_number', 'join_date')
+    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'user__email', 'contact_number')
     ordering = ('join_date',)
+
+    # Helper methods to display related fields
+    @admin.display(description="First Name")
+    def first_name(self, obj):
+        return obj.user.first_name
+
+    @admin.display(description="Last Name")
+    def last_name(self, obj):
+        return obj.user.last_name
+
+    @admin.display(description="Email")
+    def email(self, obj):
+        return obj.user.email
 
 # Inline admin for GymOwnership (to manage ownerships directly from the Gym admin)
 class GymOwnershipInline(admin.TabularInline):

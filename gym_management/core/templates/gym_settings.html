@@ -32,22 +32,34 @@
         </div>
     </div>
 
-    <!-- Add spacing between the cards -->
+    <!-- Card for Gym Admins -->
     <div class="card mt-4">
         <div class="card-header">
             <h2>Registered Admins</h2>
         </div>
         <div class="card-body">
-            <h4>Total Admins: {{ total_gym_admins }}</h4>
+            <!-- Section for Primary Owners -->
+            <h5>Registered Gym Owner:</h5>
             <ul>
-                {% for gym_owner in gym_owners %}
-                    <li>{{ gym_owner.user.get_full_name }}</li>
+                {% for ownership in primary_owners %}
+                    <li>{{ ownership.owner.user.get_full_name }}</li>
                 {% empty %}
-                    <li>No owners found for this gym.</li>
+                    <li>No primary owner assigned to this gym.</li>
+                {% endfor %}
+            </ul>
+
+            <!-- Section for Managers -->
+            <h5>Gym Managers (Admins) {{ total_gym_admins }}/20:</h5>
+            <ul>
+                {% for ownership in managers %}
+                    <li>{{ ownership.owner.user.get_full_name }}</li>
+                {% empty %}
+                    <li>No managers assigned to this gym.</li>
                 {% endfor %}
             </ul>
         </div>
     </div>
+
 
 </div>
 {% endblock %}

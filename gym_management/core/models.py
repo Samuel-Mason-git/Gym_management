@@ -24,7 +24,6 @@ class GymOwner(models.Model):
 
     # Auto Assigned
     join_date = models.DateField(auto_now_add=True)  # Automatically set when the owner is created
-    is_primary_owner = models.BooleanField(default=False)  # Track if this is the paying, primary owner
 
     def __str__(self):
         # Display the username of the gym owner
@@ -52,6 +51,13 @@ class GymOwnership(models.Model):
                 raise ValidationError(
                     f"The gym '{self.gym.name}' already has a primary owner. "
                     "You cannot add another primary owner."
+                )
+        elif self.role == 'manager':
+            # Limit the number of managers to 20
+            manager_count = GymOwnership.objects.filter(gym=self.gym, role='manager').count()
+            if manager_count >= 20:
+                raise ValidationError(
+                    f"The gym '{self.gym.name}' already has the maximum number of managers (20)."
                 )
 
     def save(self, *args, **kwargs):

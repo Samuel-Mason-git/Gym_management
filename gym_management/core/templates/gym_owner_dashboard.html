@@ -4,11 +4,12 @@
 
 {% block content %}
 <h1>Welcome, {{ gym_owner_name }}!</h1>
-<p id="assigned">Total Gyms You're Assigned To: <strong>{{ gym_count }}</strong></p>
 
-<!-- Gym cards container -->
+<!-- Section for Primary Owned Gyms -->
+<h2>Gyms You Own</h2>
+<p>Total Gyms You're the Primary Owner of: <strong>{{ primary_gyms|length }}</strong></p>
 <div class="gym-card-container">
-    {% for gym in gym_data %}
+    {% for gym in primary_gyms %}
     <div class="gym-card">
         <strong>{{ gym.gym_name }}</strong>
         <ul>
@@ -29,6 +30,29 @@
     {% endfor %}
 </div>
 
-
+<!-- Section for Managed Gyms -->
+<h2>Gyms You Manage</h2>
+<p>Total Gyms You're a Manager for: <strong>{{ managed_gyms|length }}</strong></p>
+<div class="gym-card-container">
+    {% for gym in managed_gyms %}
+    <div class="gym-card">
+        <strong>{{ gym.gym_name }}</strong>
+        <ul>
+            <li>
+                <p>All Time Members: {{ gym.member_count }}</p>
+            </li>
+            <li>
+                <p>Active Members: {{ gym.active_members }}</p>
+            </li>
+            <li>
+                <!-- Button to access dashboard page -->
+                <a href="{% url 'gym_dashboard' slug=gym.gym_slug %}">
+                    <button type="button">Gym Dashboard</button>
+                </a>
+            </li>
+        </ul>
+    </div>
+    {% endfor %}
+</div>
 
 {% endblock %}

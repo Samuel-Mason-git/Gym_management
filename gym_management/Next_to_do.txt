@@ -1,5 +1,5 @@
 
-Gym settings to manage gym owners, add owners and remove them too with a max of 20 (A new class so you have the owner and the admins).
+Gym settings to manage gym owners, add owners (Invite) and remove them too with a max of 20
 Make a recursive function that will auto mark unclosed gym sessions. 
 Add in a way for gym owners to edit their members.
 Add in a way for gym members to delete their profiles if they wish.

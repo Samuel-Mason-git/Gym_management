@@ -3,7 +3,7 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordChangeForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import GymOwner, Member, Visit, Gym
+from .models import GymOwner, Member, Visit, Gym, GymOwnership
 from .forms import GymCodeForm, MemberUpdateForm, GymUpdateForm
 from django.utils.timezone import now
 from django.utils import timezone
@@ -54,28 +54,42 @@ def login_view(request):
 def gym_owner_dashboard(request):
     user = request.user
     try:
+        # Fetch the GymOwner profile for the logged-in user
         gym_owner = GymOwner.objects.get(user=user)
-        gyms = gym_owner.gyms.all()
-        gym_count = gym_owner.gyms.count()
-        gym_owner_name = gym_owner.user.get_full_name()
-        gym_data = []
-        for gym in gyms:
-            member_count = gym.members.count()
-            slug = gym.slug
-            active_members_count = Member.objects.filter(gym=gym, active=True).count()
-            gym_data.append({
+
+        # Query for gyms where the user is the primary owner
+        primary_gyms = GymOwnership.objects.filter(owner=gym_owner, role='primary').select_related('gym')
+
+        # Query for gyms where the user is a manager
+        managed_gyms = GymOwnership.objects.filter(owner=gym_owner, role='manager').select_related('gym')
+
+        # Prepare data for primary gyms
+        primary_gym_data = []
+        for ownership in primary_gyms:
+            gym = ownership.gym
+            primary_gym_data.append({
                 'gym_name': gym.name,
-                'member_count': member_count,
-                'gym_slug': slug,
-                'active_members': active_members_count,
+                'member_count': gym.members.count(),
+                'active_members': gym.members.filter(active=True).count(),
+                'gym_slug': gym.slug,
             })
-        
-        
+
+        # Prepare data for managed gyms
+        managed_gym_data = []
+        for ownership in managed_gyms:
+            gym = ownership.gym
+            managed_gym_data.append({
+                'gym_name': gym.name,
+                'member_count': gym.members.count(),
+                'active_members': gym.members.filter(active=True).count(),
+                'gym_slug': gym.slug,
+            })
+
         context = {
             'role': 'Gym Owner',
-            'gym_count': gym_count,
-            'gym_owner_name': gym_owner_name,
-            'gym_data': gym_data,
+            'gym_owner_name': gym_owner.user.get_full_name(),
+            'primary_gyms': primary_gym_data,
+            'managed_gyms': managed_gym_data,
         }
         return render(request, 'gym_owner_dashboard.html', context)
     except GymOwner.DoesNotExist:
@@ -308,14 +322,33 @@ def gym_owner_update_view(request):
     })
 
 
-# Gym settings view
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib import messages
+from .models import Gym, GymOwnership
+from .forms import GymUpdateForm
+
 @login_required
 def gym_settings(request, slug):
-    # Ensure the user is an owner of the gym
-    gym = get_object_or_404(Gym, slug=slug, owners__user=request.user)
-    owners = gym.owners.all()
-    total_admins = owners.count()
+    # Ensure the gym exists and the logged-in user is the primary owner
+    gym = get_object_or_404(Gym, slug=slug)
+    primary_owner = gym.ownerships.filter(role='primary', owner__user=request.user).first()
 
+    # If the user is not the primary owner, redirect them or show an error
+    if not primary_owner:
+        messages.error(request, "You must be the primary owner to access the settings.")
+        return redirect('gym_dashboard', slug=gym.slug)
+
+    # Get all gym ownership relationships for this gym
+    gym_ownerships = gym.ownerships.select_related('owner').all()
+
+    # Filter primary owners and managers
+    primary_owners = gym_ownerships.filter(role='primary')
+    managers = gym_ownerships.filter(role='manager')
+    number_of_managers = managers.count()
+
+    # Total admins = primary owners + managers
+    total_admins = managers.count()
 
     if request.method == 'POST':
         # Handle the gym basic information update form
@@ -334,6 +367,7 @@ def gym_settings(request, slug):
         'form': form,
         'gym': gym,
         'gym_slug': slug,
-        'gym_owners': owners,
+        'primary_owners': primary_owners,
+        'managers': managers,
         'total_gym_admins': total_admins,
     })
