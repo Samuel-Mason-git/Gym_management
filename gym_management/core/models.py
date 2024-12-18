@@ -6,6 +6,7 @@ import random as rd
 from django.utils.text import slugify
 from django.utils.timezone import now
 from django.contrib.auth.forms import PasswordChangeForm
+from django.core.exceptions import ValidationError
 
 
 # Model to represent Gym Owners
@@ -30,7 +31,38 @@ class GymOwner(models.Model):
         return self.user.username
 
 
+# Intermediate model to link Gym and GymOwner with roles
+class GymOwnership(models.Model):
+    GYM_ROLE_CHOICES = [
+        ('primary', 'Primary Owner'),
+        ('manager', 'Manager'),
+    ]
+    gym = models.ForeignKey('Gym', on_delete=models.CASCADE, related_name='ownerships')
+    owner = models.ForeignKey(GymOwner, on_delete=models.CASCADE, related_name='gym_roles')
+    role = models.CharField(max_length=20, choices=GYM_ROLE_CHOICES, default='manager')
 
+    class Meta:
+        unique_together = ('gym', 'owner')  # Prevent duplicate relationships for the same gym and owner
+
+    def clean(self):
+        """Custom validation logic."""
+        if self.role == 'primary':
+            existing_primary = GymOwnership.objects.filter(gym=self.gym, role='primary').exclude(id=self.id)
+            if existing_primary.exists():
+                raise ValidationError(
+                    f"The gym '{self.gym.name}' already has a primary owner. "
+                    "You cannot add another primary owner."
+                )
+
+    def save(self, *args, **kwargs):
+        # Call the clean method to validate the model instance
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.owner} - {self.gym} ({self.role})"
+    
+    
 
 # Model to represent Gyms
 class Gym(models.Model):
@@ -43,8 +75,7 @@ class Gym(models.Model):
     address = models.TextField(blank=True, null=True)
     contact_number = models.CharField(max_length=15, null=True)
     email = models.EmailField(max_length=255, blank=True, null=True)
-    primary_owner = models.ForeignKey(GymOwner, related_name='primary_own', on_delete=models.CASCADE)
-
+    
     # Link to the GymOwner who owns this gym
     # A GymOwner can own multiple gyms (one-to-many relationship)
     owners = models.ManyToManyField(GymOwner, related_name='gyms')
@@ -58,9 +89,14 @@ class Gym(models.Model):
     def __str__(self):
         # Display the name of the gym
         return self.name
+    
+    def get_primary_owner(self):
+        # Return the primary owner of the gym
+        return self.ownerships.filter(role='primary').first()
 
-
-
+    def get_managers(self):
+        # Return all managers of the gym
+        return self.ownerships.filter(role='manager')
 
 
 # Model to represent Gym Members
