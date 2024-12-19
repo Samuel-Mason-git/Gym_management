@@ -196,6 +196,8 @@ def gym_dashboard(request, slug):
         return redirect('login')
 
     # Metrics for Gym Dashboard
+
+    is_admin = gym.ownerships.filter(owner__user=user, role='primary').exists()
     member_count = gym.members.count()
     active_members_count = Member.objects.filter(gym=gym, active=True).count()
     inactive_members_count = Member.objects.filter(gym=gym, active=False).count()
@@ -234,6 +236,7 @@ def gym_dashboard(request, slug):
         'recent_visits': recent_visits,
         'active_members': active_members_count,
         'inactive_members': inactive_members_count,
+        'is_admin': is_admin,
     }
     
     return render(request, 'gym_dashboard.html', context)  
@@ -370,4 +373,28 @@ def gym_settings(request, slug):
         'primary_owners': primary_owners,
         'managers': managers,
         'total_gym_admins': total_admins,
+        'is_admin': True,
     })
+
+
+
+@login_required
+def remove_manager(request, slug, manager_id):
+    gym = get_object_or_404(Gym, slug=slug)
+    primary_owner = gym.ownerships.filter(role='primary', owner__user=request.user).first()
+
+    # Ensure the logged-in user is the primary owner
+    if not primary_owner:
+        messages.error(request, "You must be the primary owner to remove a manager.")
+        return redirect('gym_dashboard', slug=gym.slug)
+
+    # Get the manager object and remove the ownership relation
+    manager_ownership = gym.ownerships.filter(owner__id=manager_id, role='manager').first()
+
+    if manager_ownership:
+        manager_ownership.delete()
+        messages.success(request, "Manager removed successfully.")
+    else:
+        messages.error(request, "Manager not found.")
+
+    return redirect('gym_settings', slug=slug)

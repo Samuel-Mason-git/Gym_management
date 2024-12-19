@@ -4,7 +4,17 @@
 
 {% block content %}
 <h1>{{ gym.name }} Settings</h1>
-
+<p>Only you as the Gym Owner can view this page, Admins will not have access</p>
+<!-- Display success and error messages -->
+{% if messages %}
+<div class="alert-container">
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} mt-3" role="alert">
+            {{ message }}
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
 <div class="container mt-5">
     <!-- Card for Gym Information -->
     <div class="card">
@@ -12,17 +22,6 @@
             <h2>Gym Basic Information</h2>
         </div>
         <div class="card-body">
-            <!-- Display success and error messages -->
-            {% if messages %}
-            <div class="alert-container">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} mt-3" role="alert">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-
             <!-- Gym information form -->
             <form method="post">
                 {% csrf_token %}
@@ -35,30 +34,61 @@
     <!-- Card for Gym Admins -->
     <div class="card mt-4">
         <div class="card-header">
-            <h2>Registered Admins</h2>
+            <h2>Gym Owner</h2>
         </div>
         <div class="card-body">
-            <!-- Section for Primary Owners -->
-            <h5>Registered Gym Owner:</h5>
-            <ul>
-                {% for ownership in primary_owners %}
-                    <li>{{ ownership.owner.user.get_full_name }}</li>
-                {% empty %}
-                    <li>No primary owner assigned to this gym.</li>
-                {% endfor %}
-            </ul>
-
-            <!-- Section for Managers -->
-            <h5>Gym Managers (Admins) {{ total_gym_admins }}/20:</h5>
-            <ul>
-                {% for ownership in managers %}
-                    <li>{{ ownership.owner.user.get_full_name }}</li>
-                {% empty %}
-                    <li>No managers assigned to this gym.</li>
-                {% endfor %}
-            </ul>
+            <!-- Display the Primary Owner's details in a structured way -->
+            {% if primary_owners %}
+            <div>
+                <h5>{{ primary_owners.first.owner.user.get_full_name }}</h5>
+                <p class="text-muted">{{ primary_owners.first.owner.user.email }}</p>
+                <p><strong>Role:</strong> Gym Owner</p>
+                <p><strong>Joined:</strong> {{ primary_owners.first.owner.user.date_joined|date:"F j, Y" }}</p>
+            </div>
+            {% else %}
+            <p>No primary owner assigned to this gym.</p>
+            {% endif %}
         </div>
     </div>
+
+<!-- Card for Gym Admins -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h3>Gym Managers {{ total_gym_admins }}/20</h3>
+    </div>
+    <div class="card-body">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ownership in managers %}
+                    <tr>
+                        <td>{{ ownership.owner.user.get_full_name }}</td>
+                        <td>{{ ownership.owner.user.email }}</td>
+                        <td>{{ ownership.role }}</td>
+                        <td>
+                            <!-- Remove Button (Styled in Red) -->
+                            <form action="{% url 'remove_manager' slug=gym_slug manager_id=ownership.owner.id %}" method="POST" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to remove this manager?')">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">No managers assigned to this gym.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
 
 </div>

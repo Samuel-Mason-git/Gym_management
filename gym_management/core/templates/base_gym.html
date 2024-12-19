@@ -25,9 +25,11 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'gym_dashboard' slug=gym_slug %}">Gym Dashboard</a>
                         </li>
+                        {% if is_admin %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'gym_settings' slug=gym_slug %}">Gym Settings</a>
                         </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'gym_checkin' slug=gym_slug %}" target="_blank">Check-In Form</a>
                         </li>
