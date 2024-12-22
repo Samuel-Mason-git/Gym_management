@@ -81,6 +81,7 @@ class Gym(models.Model):
     address = models.TextField(blank=True, null=True)
     contact_number = models.CharField(max_length=15, null=True)
     email = models.EmailField(max_length=255, blank=True, null=True)
+    email_domain = models.EmailField(blank=True, null=True) # Custom Email Domain to be added
     
     # Link to the GymOwner who owns this gym
     # A GymOwner can own multiple gyms (one-to-many relationship)

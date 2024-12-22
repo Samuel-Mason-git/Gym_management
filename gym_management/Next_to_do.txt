@@ -1,8 +1,9 @@
 
 Gym settings to add owners (Invite)
 Gym settings to delete a gym
-Add in a way for gym owners to edit their members.
+Gym settings for gym owners to add gyms to a set limit
 Add in a way for gym members to delete their profiles if they wish.
+Add in a way for gyms to edit their members.
 
 Add in models for subscription information for gym members:
 Type of membership

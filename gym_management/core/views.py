@@ -8,10 +8,13 @@ from .forms import GymCodeForm, MemberUpdateForm, GymUpdateForm
 from django.utils.timezone import now
 from django.utils import timezone
 from django.http import JsonResponse
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
 from django.contrib.auth.models import User
 from django.db.models import Count
 from django.contrib.auth import update_session_auth_hash
-
+from core.emails import send_email
+from django.conf import settings
 
 # Login View with conditional dashboard redirecting dependant on what status a user account is
 def login_view(request):
@@ -188,11 +191,11 @@ def gym_dashboard(request, slug):
         # Fetch the gym owner object
         gym_owner = GymOwner.objects.get(user=user)
         if gym not in gym_owner.gyms.all():
-            messages.error(request, "You are not authorized to access this gym's dashboard.")
+            messages.error(request, "You are not authorised to access this gym's dashboard.")
             return redirect('login')
     # If it fails
     except GymOwner.DoesNotExist:
-        messages.error(request, "You are not authorized to access the dashboard of this gym.")
+        messages.error(request, "You are not authorised to access the dashboard of this gym.")
         return redirect('login')
 
     # Metrics for Gym Dashboard
@@ -240,7 +243,6 @@ def gym_dashboard(request, slug):
     }
     
     return render(request, 'gym_dashboard.html', context)  
-
 
 
 # Member details update form
