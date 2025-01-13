@@ -400,3 +400,57 @@ def remove_manager(request, slug, manager_id):
         messages.error(request, "Manager not found.")
 
     return redirect('gym_settings', slug=slug)
+
+
+
+
+@login_required
+def invite_or_assign_manager(request, slug):
+    gym = get_object_or_404(Gym, slug=slug)
+    primary_owner = gym.ownerships.filter(role='primary', owner__user=request.user).first()
+
+    # Ensure the logged-in user is the primary owner
+    if not primary_owner:
+        messages.error(request, "You must be the primary owner to invite or assign a manager.")
+        return redirect('gym_dashboard', slug=gym.slug)
+
+    if request.method == 'POST':
+        email = request.POST.get('email')
+
+        if not email:
+            messages.error(request, "Email is required to invite or assign a manager.")
+            return redirect('gym_settings', slug=gym.slug)
+
+        # Check if the user exists
+        user = User.objects.filter(email=email).first()
+        if user:
+            # Check if they are already a manager
+            existing_manager = gym.ownerships.filter(owner__user=user, role='manager').first()
+            if existing_manager:
+                messages.warning(request, "This user is already a manager for this gym.")
+            else:
+                # Assign as manager
+                gym_owner = GymOwner.objects.get_or_create(user=user)[0]
+                GymOwnership.objects.create(gym=gym, owner=gym_owner, role='manager')
+                messages.success(request, f"{user.get_full_name()} has been added as a manager.")
+        else:
+            # ----------------------- ADD IN FUNCTION FOR INVITING A USER TO BECOME A GYM OWNER
+            token = urlsafe_base64_encode(force_bytes(email))
+            invitation_link = f"{settings.SITE_URL}/register/?token={token}&gym={gym.slug}"
+
+            # Send invitation email
+            send_email(
+                subject="You're invited to manage a gym!",
+                to=email,
+                template="emails/invite_manager.html",
+                context={
+                    'gym_name': gym.name,
+                    'invitation_link': invitation_link,
+                    'primary_owner': primary_owner.owner.user.get_full_name(),
+                }
+            )
+            messages.success(request, f"An invitation has been sent to {email}.")
+
+        return redirect('gym_settings', slug=gym.slug)
+
+    return redirect('gym_settings', slug=gym.slug)
