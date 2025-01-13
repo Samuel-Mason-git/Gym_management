@@ -51,45 +51,43 @@
         </div>
     </div>
 
-<!-- Card for Gym Admins -->
-<div class="card mt-4">
-    <div class="card-header">
-        <h3>Gym Managers {{ total_gym_admins }}/20</h3>
-    </div>
-    <div class="card-body">
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for ownership in managers %}
+    <!-- Card for Gym Admins -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h3>Gym Managers {{ total_gym_admins }}/20</h3>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead>
                     <tr>
-                        <td>{{ ownership.owner.user.get_full_name }}</td>
-                        <td>{{ ownership.owner.user.email }}</td>
-                        <td>{{ ownership.role }}</td>
-                        <td>
-                            <!-- Remove Button (Styled in Red) -->
-                            <form action="{% url 'remove_manager' slug=gym_slug manager_id=ownership.owner.id %}" method="POST" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to remove this manager?')">Remove</button>
-                            </form>
-                        </td>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Actions</th>
                     </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="4">No managers assigned to this gym.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for ownership in managers %}
+                        <tr>
+                            <td>{{ ownership.owner.user.get_full_name }}</td>
+                            <td>{{ ownership.owner.user.email }}</td>
+                            <td>{{ ownership.role }}</td>
+                            <td>
+                                <!-- Remove Button (Styled in Red) -->
+                                <form action="{% url 'remove_manager' slug=gym_slug manager_id=ownership.owner.id %}" method="POST" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to remove this manager?')">Remove</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4">No managers assigned to this gym.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
-
-
 </div>
 {% endblock %}

@@ -219,4 +219,71 @@ class Visit(models.Model):
             # Calculate average session time (in minutes)
             average_session_time = total_session_time / valid_visits_count
             return round((average_session_time.total_seconds() / 60),2)  # Convert to minutes
-        return 0  # No visits, return 0 minute
+        return 0  # No visits, return 0 minute]
+
+
+
+
+# A Product table  with a foriegn key of gyms so each gym can offer its own products and we store them all in one big database
+class Product(models.Model):
+    stripe_product_id = models.CharField(max_length=255, unique=True)  # Stripe product ID
+    gym = models.ForeignKey(Gym, on_delete=models.CASCADE, related_name='products')  # Link to the gym
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)  # Local price
+    stripe_price_id = models.CharField(max_length=255, unique=True)  # Stripe price ID
+    active = models.BooleanField(default=True)  # Indicates whether the product is available
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.gym.name})"
+
+
+
+# A subscription model table linking to each gym so we can see all subscribers, their status and then which gym they belong too
+class Subscription(models.Model):
+    stripe_subscription_id = models.CharField(max_length=255, unique=True)  # Stripe subscription ID
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='subscriptions')
+    gym = models.ForeignKey(Gym, on_delete=models.CASCADE, related_name='subscriptions')  # Gym context
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='subscriptions')
+    start_date = models.DateTimeField()  # Subscription start
+    end_date = models.DateTimeField(null=True, blank=True)  # Optional end date
+    status = models.CharField(
+        max_length=50,
+        choices=[
+            ('active', 'Active'),
+            ('canceled', 'Canceled'),
+            ('past_due', 'Past Due'),
+            ('unpaid', 'Unpaid'),
+        ],
+        default='active'
+    )
+    auto_renew = models.BooleanField(default=True)  # Automatically renew subscription
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.member.user.username} - {self.product.name} ({self.status})"
+
+
+# A orders table for all orders processed under the web application
+class Order(models.Model):
+    stripe_payment_intent_id = models.CharField(max_length=255, unique=True)  # Stripe payment intent ID
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='orders')
+    gym = models.ForeignKey(Gym, on_delete=models.CASCADE, related_name='orders')  # Link to gym
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='orders')
+    quantity = models.PositiveIntegerField(default=1)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)  # Total amount
+    status = models.CharField(
+        max_length=50,
+        choices=[
+            ('succeeded', 'Succeeded'),
+            ('failed', 'Failed'),
+            ('pending', 'Pending'),
+        ],
+        default='pending'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Order #{self.id} ({self.member.user.username}) - {self.status}"

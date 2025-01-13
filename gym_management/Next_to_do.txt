@@ -3,7 +3,8 @@ Gym settings to add owners (Invite)
 Gym settings to delete a gym
 Gym settings for gym owners to add gyms to a set limit
 Add in a way for gym members to delete their profiles if they wish.
-Add in a way for gyms to edit their members.
+Add in a way for gyms to edit and view their members.
+Add in domain name addition for emails for each gym to have.
 
 Add in models for subscription information for gym members:
 Type of membership
@@ -16,14 +17,15 @@ Total amount paid
 Payment Method (e.g., card, bank transfer)
 Status of Current Payment (Paid, Due, Overdue)
 
+Gym owners need to be able to create products and subscriptions using the models added
 
 
 Stage Two:
 1. Add in a subscription database
 2. Add in an orders database
-3. Add in a products database and page for Gym Owners
-4. Connect Stripe
-5. Allow for gym members to make subscription products, this generates a page for a user to sign update
+3. Add in a products database and 
+4. Page for Gym Owners to Connect Stripe with their keys
+5. Allow for gym members to make subscriptions and products, add a checkout page or shop for the products that auto generates
 6. Turn users to active
-7. Track active subscription information
+7. Track active subscription information (setup webhooks for stripe to recieve the data about the subscription and to make products)
 8. Track all revenue information and add a revenue page for each gym
