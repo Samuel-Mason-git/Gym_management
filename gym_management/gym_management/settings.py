@@ -15,7 +15,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -26,6 +25,8 @@ SECRET_KEY = "django-insecure--$lp5l4c+l2o$5zh)+17nf6p4x&q_4n1p*51bkar$hry84vjuu
 DEBUG = True
 
 DEFAULT_FROM_EMAIL = 'noreply@yourplatform.com'
+SITE_URL = 'http://127.0.0.1:8000'
+SITE_NAME = 'FitTrack'
 
 ALLOWED_HOSTS = []
 

@@ -12,4 +12,7 @@ urlpatterns = [
     path('gym-owner-update-info/', views.gym_owner_update_view, name='gym_owner_update_view'),
     path('<slug:slug>/settings/', views.gym_settings, name='gym_settings'),
     path('gym-d/settings/<slug:slug>/remove-manager/<int:manager_id>/', views.remove_manager, name='remove_manager'),
-]
+    path('gym/<slug:slug>/invite-manager/', views.invite_or_assign_manager, name='invite_or_assign_manager'),
+    path('register-manager/', views.register_manager, name='register_manager'),
+    path('gym/<slug:slug>/delete/', views.delete_gym, name='delete_gym'),
+    ]

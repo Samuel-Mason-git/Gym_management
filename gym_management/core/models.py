@@ -287,3 +287,13 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order #{self.id} ({self.member.user.username}) - {self.status}"
+
+
+
+# This is to store the verification tokens for gym manager invites
+class VerificationToken(models.Model):
+    email = models.EmailField()
+    token = models.CharField(max_length=8, unique=True)
+    gym = models.ForeignKey(Gym, on_delete=models.CASCADE)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)

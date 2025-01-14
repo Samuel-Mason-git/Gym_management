@@ -11,6 +11,23 @@
     >
     {% block extra_styles %}{% endblock %}
 </head>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const confirmationInput = document.getElementById("confirmationInput");
+        const confirmDeleteButton = document.getElementById("confirmDeleteButton");
+        const errorMessage = document.getElementById("errorMessage");
+
+        confirmationInput.addEventListener("input", () => {
+            if (confirmationInput.value.trim().toUpperCase() === "DELETE") {
+                confirmDeleteButton.disabled = false;
+                errorMessage.style.display = "none";
+            } else {
+                confirmDeleteButton.disabled = true;
+                errorMessage.style.display = "block";
+            }
+        });
+    });
+</script>
 <body>
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -29,10 +46,10 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'gym_settings' slug=gym_slug %}">Gym Settings</a>
                         </li>
-                        {% endif %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'gym_checkin' slug=gym_slug %}" target="_blank">Check-In Form</a>
                         </li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>
@@ -43,7 +60,7 @@
     </div>
 
     <footer class="mt-5 text-center">
-        <p>&copy; SRM Development Dashboard - All Rights Reserved</p>
+        <p>&copy; FitTrack - All Rights Reserved</p>
     </footer>
 
     <!-- Bootstrap JS -->

@@ -3,8 +3,8 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordChangeForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import GymOwner, Member, Visit, Gym, GymOwnership
-from .forms import GymCodeForm, MemberUpdateForm, GymUpdateForm
+from .models import GymOwner, Member, Visit, Gym, GymOwnership, VerificationToken
+from .forms import GymCodeForm, MemberUpdateForm, GymUpdateForm, ManagerRegistrationForm
 from django.utils.timezone import now
 from django.utils import timezone
 from django.http import JsonResponse
@@ -15,6 +15,9 @@ from django.db.models import Count
 from django.contrib.auth import update_session_auth_hash
 from core.emails import send_email
 from django.conf import settings
+import random
+from django.urls import reverse
+from datetime import timedelta
 
 # Login View with conditional dashboard redirecting dependant on what status a user account is
 def login_view(request):
@@ -187,15 +190,19 @@ def gym_dashboard(request, slug):
     user = request.user
     gym = get_object_or_404(Gym, slug=slug)
     # Check if logged in user is not the gym owner
+    # Check if the logged-in user is a gym owner or manager for this gym
     try:
-        # Fetch the gym owner object
-        gym_owner = GymOwner.objects.get(user=user)
-        if gym not in gym_owner.gyms.all():
-            messages.error(request, "You are not authorised to access this gym's dashboard.")
+        gym_ownership = GymOwnership.objects.filter(
+            gym=gym,
+            owner__user=user,
+            role__in=['primary', 'manager']
+        ).first()
+
+        if not gym_ownership:
+            messages.error(request, "You are not authorized to access this gym's dashboard.")
             return redirect('login')
-    # If it fails
-    except GymOwner.DoesNotExist:
-        messages.error(request, "You are not authorised to access the dashboard of this gym.")
+    except GymOwnership.DoesNotExist:
+        messages.error(request, "You are not authorized to access this gym's dashboard.")
         return redirect('login')
 
     # Metrics for Gym Dashboard
@@ -408,6 +415,9 @@ def remove_manager(request, slug, manager_id):
 def invite_or_assign_manager(request, slug):
     gym = get_object_or_404(Gym, slug=slug)
     primary_owner = gym.ownerships.filter(role='primary', owner__user=request.user).first()
+    # Initialize 
+    subject = ''
+    body = ''
 
     # Ensure the logged-in user is the primary owner
     if not primary_owner:
@@ -429,28 +439,126 @@ def invite_or_assign_manager(request, slug):
             if existing_manager:
                 messages.warning(request, "This user is already a manager for this gym.")
             else:
-                # Assign as manager
-                gym_owner = GymOwner.objects.get_or_create(user=user)[0]
+                # Ensure the user has a GymOwner instance
+                gym_owner, created = GymOwner.objects.get_or_create(user=user)
+
+                # Assign as manager and notify
                 GymOwnership.objects.create(gym=gym, owner=gym_owner, role='manager')
                 messages.success(request, f"{user.get_full_name()} has been added as a manager.")
+
+                subject = "Added as a Manager for: {gym.name}"
+                body = f"""
+                <p>Dear {user.first_name},</p>
+                <p>You have been added as a manager for the gym <strong>{gym.name}</strong>.</p>
+                <p>You will now find the Gym's dashboard on your Gym Owners dashboard after login.</p>
+                <p>Thank you,</p>
+                <p>{settings.SITE_NAME} Team</p>
+            """
+            send_email(subject, body, [email], gym=gym)
+
         else:
-            # ----------------------- ADD IN FUNCTION FOR INVITING A USER TO BECOME A GYM OWNER
-            token = urlsafe_base64_encode(force_bytes(email))
-            invitation_link = f"{settings.SITE_URL}/register/?token={token}&gym={gym.slug}"
+            unique_token = random.randint(10000000,99999999)
+            expiration_date = now() + timedelta(days=7)
+            VerificationToken.objects.create(
+                email=email,
+                token=unique_token,
+                gym=gym,
+                expires_at=expiration_date
+            )
 
             # Send invitation email
-            send_email(
-                subject="You're invited to manage a gym!",
-                to=email,
-                template="emails/invite_manager.html",
-                context={
-                    'gym_name': gym.name,
-                    'invitation_link': invitation_link,
-                    'primary_owner': primary_owner.owner.user.get_full_name(),
-                }
-            )
-            messages.success(request, f"An invitation has been sent to {email}.")
+            subject = f"Invitation to Manage {gym.name} at {settings.SITE_NAME}"
+            registration_url = f"{settings.SITE_URL}{reverse('register_manager')}"
+            body = f"""
+                <p>Dear User,</p>
+                <p>You have been invited to become a manager for the gym <strong>{gym.name}</strong>.</p>
+                <p>Your unique 8-digit verification code is: <strong>{unique_token}</strong>. HURRY! As this code will expire in 7 days.</p>
+                <p>Please click the link below to register and accept your manager role:</p>
+                <p><a href="{registration_url}">Accept Invitation</a></p>
+                <p>Thank you,</p>
+                <p>{settings.SITE_NAME} Team</p>
+            """
+            try:
+                send_email(subject, body, [email], gym=gym)
+                messages.success(request, "Invitation email has been sent successfully.")
+            except Exception as e:
+                messages.error(request, f"Failed to send email: {e}")
 
         return redirect('gym_settings', slug=gym.slug)
 
     return redirect('gym_settings', slug=gym.slug)
+
+
+
+
+# A view to verify the code and email for an invite as a Gym Manager and add them
+def register_manager(request):
+    if request.method == "POST":
+        form = ManagerRegistrationForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            token = form.cleaned_data['token']
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            first_name = form.cleaned_data['first_name']
+            last_name = form.cleaned_data['last_name']
+
+            # Validate the token
+            try:
+                verification_token = VerificationToken.objects.get(email=email, token=token)
+                if verification_token.is_used:
+                    messages.error(request, "This verification code has already been used.")
+                    return render(request, 'register_manager.html', {'form': form})
+                if verification_token.expires_at < now():
+                    messages.error(request, "This verification code has expired.")
+                    return render(request, 'register_manager.html', {'form': form})
+
+                # Create the user
+                user = User.objects.create_user(username=username, email=email, password=password, first_name=first_name, last_name=last_name)
+                
+                # Ensure the user has a GymOwner instance
+                gym_owner, created = GymOwner.objects.get_or_create(user=user)
+
+                # Assign the user as a manager to the gym
+                gym = verification_token.gym
+                GymOwnership.objects.create(gym=gym, owner=gym_owner, role='manager')
+
+                # Mark the token as used
+                verification_token.is_used = True
+                verification_token.save()
+
+                messages.success(request, "Registration successful! You are now a manager.")
+                return redirect('login')  # Redirect to login or dashboard
+            except VerificationToken.DoesNotExist:
+                messages.error(request, "Invalid email or verification code.")
+        else:
+            # Invalid form
+            messages.error(request, "Please correct the errors below.")
+
+    else:
+        form = ManagerRegistrationForm()
+
+    return render(request, 'register_manager.html', {'form': form})
+
+
+
+# Button for a gym owner to delete a gym
+@login_required
+def delete_gym(request, slug):
+    # Fetch the gym
+    gym = get_object_or_404(Gym, slug=slug)
+
+    # Ensure the logged-in user is the primary owner
+    primary_owner = gym.ownerships.filter(role='primary', owner__user=request.user).first()
+    if not primary_owner:
+        messages.error(request, "You must be the primary owner to delete this gym.")
+        return redirect('gym_dashboard', slug=gym.slug)
+
+    if request.method == "POST":
+        # Delete the gym and related ownerships
+        gym.delete()
+        messages.success(request, "Gym deleted successfully!")
+        return redirect('gym_owner_dashboard')
+
+    # Redirect back if the method is not POST
+    return redirect('gym_settings', slug=slug)

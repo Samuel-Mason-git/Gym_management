@@ -3,6 +3,8 @@
 {% block title %}Gym Settings{% endblock %}
 
 {% block content %}
+
+
 <h1>{{ gym.name }} Settings</h1>
 <p>Only you as the Gym Owner can view this page, Admins will not have access</p>
 <!-- Display success and error messages -->
@@ -26,7 +28,7 @@
             <form method="post">
                 {% csrf_token %}
                 {{ form.as_p }}
-                <button type="submit" class="btn btn-primary mt-3">Update Gym Information</button>
+                <button type="submit" class="btn btn-primary">Update Gym Information</button>
             </form>
         </div>
     </div>
@@ -50,6 +52,7 @@
             {% endif %}
         </div>
     </div>
+
 
     <!-- Card for Gym Admins -->
     <div class="card mt-4">
@@ -89,5 +92,57 @@
             </table>
         </div>
     </div>
+
+        <!-- Card to invite Gym Admins -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h3>Invite a user to manage your Gym profile</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{% url 'invite_or_assign_manager' slug=gym.slug %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Manager's Email</label>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="Enter manager's email" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Invite/Assign Manager</button>
+                </form>
+            </div>
+        </div>
+
+
+        <!-- Delete Gym Button -->
+        <div class="delete-button-container" style="margin-top: 15px;">
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteGymModal">
+                Delete Gym
+            </button>
+        </div>
+
+
+        <!-- Confirmation Modal -->
+        <div class="modal fade" id="deleteGymModal" tabindex="-1" aria-labelledby="deleteGymModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteGymModalLabel">Confirm Deletion</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Type "<strong>DELETE</strong>" below to confirm you want to delete this gym. This action cannot be undone.</p>
+                        <input type="text" id="confirmationInput" class="form-control" placeholder="Type DELETE to confirm" />
+                        <p id="errorMessage" class="text-danger mt-2" style="display: none;">You must type "DELETE" to confirm.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form method="POST" action="{% url 'delete_gym' gym.slug %}" id="deleteGymForm">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger" id="confirmDeleteButton" disabled>Confirm</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
 </div>
 {% endblock %}
