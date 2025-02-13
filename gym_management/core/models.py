@@ -9,24 +9,54 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.core.exceptions import ValidationError
 
 
+class SubscriptionTier(models.Model):
+    name = models.CharField(max_length=100)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    max_gyms = models.PositiveIntegerField(default=1)
+    max_members = models.PositiveIntegerField(default=1000)
+    max_regular_products = models.PositiveIntegerField(default=10)
+    max_subscription_products = models.PositiveIntegerField(default=10)
+
+    def __str__(self):
+        return self.name
+
+
 # Model to represent Gym Owners
 class GymOwner(models.Model):
     # Link to Django's User model for authentication and login
     user = models.OneToOneField(User, on_delete=models.CASCADE)  
-    
-    # Mandatory personal information
     contact_number = models.CharField(max_length=15)
-
-    
-    # Additional Optional personal information for the gym owner
     date_of_birth = models.DateField(null=True, blank=True)  
     address = models.TextField(blank=True, null=True) 
+    join_date = models.DateField(auto_now_add=True)  
 
-    # Auto Assigned
-    join_date = models.DateField(auto_now_add=True)  # Automatically set when the owner is created
+    # Subscription info for the gym owner
+    subscription_tier = models.ForeignKey(SubscriptionTier, on_delete=models.SET_NULL, null=True)
+    subscription_start_date = models.DateTimeField(null=True, blank=True)
+
+    def get_usage_and_limit(self, resource: str) -> dict:
+        if not self.subscription_tier:
+            return {'current_usage': 0, 'max_limit': 0}  # No subscription means no access
+    
+        # Subscription-wide limits
+        limits = {
+            'gyms': self.subscription_tier.max_gyms,
+            'members': self.subscription_tier.max_members,
+        }
+    
+        # Current usage
+        usage = {
+            'gyms': self.gyms.filter(ownerships__role='primary').count(),  # Count only primary gyms
+            'members': sum(gym.members.count() for gym in self.gyms.filter(ownerships__role='primary')),  # Count members in primary gyms only
+        }
+    
+        return {
+            'current_usage': usage.get(resource, 0),
+            'max_limit': limits.get(resource, 0)
+        }
+
 
     def __str__(self):
-        # Display the username of the gym owner
         return self.user.username
 
 

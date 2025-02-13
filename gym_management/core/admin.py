@@ -1,5 +1,10 @@
 from django.contrib import admin
 from .models import GymOwner, GymOwnership, Gym, Member, Visit
+from .models import SubscriptionTier
+
+@admin.register(SubscriptionTier)
+class SubscriptionTierAdmin(admin.ModelAdmin):
+    list_display = ("name", "price", "max_gyms", "max_members")
 
 # Admin configuration for GymOwner
 @admin.register(GymOwner)

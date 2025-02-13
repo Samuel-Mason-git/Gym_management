@@ -1,6 +1,7 @@
 
-
-Gym settings for gym owners to add gyms to a set limit
+Ability to add gyms to a set limit
+Add in gym owner subscriptions
+Add in gym owners signups and subscriptions so they work
 Add in a way for gym members to delete their profiles if they wish.
 Add in a way for gyms to edit and view their members.
 Add in domain name addition for emails for each gym to have.

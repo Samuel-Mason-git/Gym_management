@@ -1,34 +1,85 @@
 {% extends 'gym_owner_base.html' %}
 
+<style>
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+  background-color: white;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+}
+
+.close-btn {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+</style>
 {% block title %}Gym Owner Dashboard{% endblock %}
 
 {% block content %}
+
+
 <h1>Welcome, {{ gym_owner_name }}!</h1>
 
-<!-- Section for Primary Owned Gyms -->
+<h3>Your Subscription Limits</h3>
+<p><strong>Gyms:</strong> {{ gym_limit.current_usage }} / {{ gym_limit.max_limit }}</p>
+<p><strong>Members:</strong> {{ member_limit.current_usage }} / {{ member_limit.max_limit }}</p>
+
 <h2>Gyms You Own</h2>
-<p>Total Gyms You're the Primary Owner of: <strong>{{ primary_gyms|length }}</strong></p>
-<div class="gym-card-container">
-    {% for gym in primary_gyms %}
-    <div class="gym-card">
-        <strong>{{ gym.gym_name }}</strong>
-        <ul>
-            <li>
-                <p>All Time Members: {{ gym.member_count }}</p>
-            </li>
-            <li>
-                <p>Active Members: {{ gym.active_members }}</p>
-            </li>
-            <li>
-                <!-- Button to access dashboard page -->
-                <a href="{% url 'gym_dashboard' slug=gym.gym_slug %}">
-                    <button type="button">Gym Dashboard</button>
-                </a>
-            </li>
-        </ul>
+{% if gym_limit.current_usage == 0 %}
+    <p>You don't own any gyms.</p>
+{% else %}
+    <div class="gym-card-container">
+        {% for gym in primary_gyms %}
+        <div class="gym-card">
+            <strong>{{ gym.gym_name }}</strong>
+            <ul>
+                <li>
+                    <p>All Time Members: {{ gym.member_count }}</p>
+                </li>
+                <li>
+                    <p>Active Members: {{ gym.active_members }}</p>
+                </li>
+                <li>
+                    <!-- Button to access dashboard page -->
+                    <a href="{% url 'gym_dashboard' slug=gym.gym_slug %}">
+                        <button type="button">Gym Dashboard</button>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        {% endfor %}
+        {% if  gym_limit.current_usage != gym_limit.max_limit %}
+        <div class="gym-card">
+            <strong>Add A Gym</strong>
+            <p>You can add {{ gyms_to_add }} more gyms.</p>
+            <button>Add New Gym</button>
+        </div>
+        {% endif %}
     </div>
-    {% endfor %}
-</div>
+{% endif %}
 
 <!-- Section for Managed Gyms -->
 <h2>Gyms You Manage</h2>

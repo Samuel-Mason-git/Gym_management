@@ -4,7 +4,7 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, Pass
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .models import GymOwner, Member, Visit, Gym, GymOwnership, VerificationToken
-from .forms import GymCodeForm, MemberUpdateForm, GymUpdateForm, ManagerRegistrationForm
+from .forms import GymCodeForm, MemberUpdateForm, GymUpdateForm, ManagerRegistrationForm, GymCreationForm
 from django.utils.timezone import now
 from django.utils import timezone
 from django.http import JsonResponse
@@ -91,13 +91,24 @@ def gym_owner_dashboard(request):
                 'gym_slug': gym.slug,
             })
 
+
+        # Get the limits and usage for gyms, members, etc.
+        gym_limit = gym_owner.get_usage_and_limit("gyms")
+        member_limit = gym_owner.get_usage_and_limit("members")
+        gyms_to_add = gym_limit['max_limit'] - gym_limit['current_usage']
+
         context = {
             'role': 'Gym Owner',
             'gym_owner_name': gym_owner.user.get_full_name(),
             'primary_gyms': primary_gym_data,
             'managed_gyms': managed_gym_data,
+            'gym_limit': gym_limit,
+            'member_limit': member_limit,
+            'gyms_to_add': gyms_to_add,
         }
+
         return render(request, 'gym_owner_dashboard.html', context)
+    
     except GymOwner.DoesNotExist:
         messages.error(request, "No gym owner profile found.")
         return redirect('login')
@@ -418,6 +429,8 @@ def invite_or_assign_manager(request, slug):
     # Initialize 
     subject = ''
     body = ''
+    max_managers = 20  # Maximum number of managers allowed
+    current_manager_count = gym.ownerships.filter(role='manager').count()
 
     # Ensure the logged-in user is the primary owner
     if not primary_owner:
@@ -431,6 +444,11 @@ def invite_or_assign_manager(request, slug):
             messages.error(request, "Email is required to invite or assign a manager.")
             return redirect('gym_settings', slug=gym.slug)
 
+         # Check if the gym already has the maximum number of managers
+        if current_manager_count >= max_managers:
+            messages.error(request, f"This gym already has the maximum number of managers ({max_managers}).")
+            return redirect('gym_settings', slug=gym.slug)
+
         # Check if the user exists
         user = User.objects.filter(email=email).first()
         if user:
@@ -441,6 +459,7 @@ def invite_or_assign_manager(request, slug):
             else:
                 # Ensure the user has a GymOwner instance
                 gym_owner, created = GymOwner.objects.get_or_create(user=user)
+
 
                 # Assign as manager and notify
                 GymOwnership.objects.create(gym=gym, owner=gym_owner, role='manager')
@@ -513,14 +532,23 @@ def register_manager(request):
                     messages.error(request, "This verification code has expired.")
                     return render(request, 'register_manager.html', {'form': form})
 
+                # Get the gym associated with the token
+                gym = verification_token.gym
+
+                # Check if the gym already has the maximum number of managers
+                max_managers = 20  # Define your maximum managers limit
+                current_manager_count = GymOwnership.objects.filter(gym=gym, role='manager').count()
+                if current_manager_count >= max_managers:
+                    messages.error(request, f"This gym already has the maximum number of managers ({max_managers}).")
+                    return render(request, 'register_manager.html', {'form': form})
+
                 # Create the user
                 user = User.objects.create_user(username=username, email=email, password=password, first_name=first_name, last_name=last_name)
-                
+
                 # Ensure the user has a GymOwner instance
                 gym_owner, created = GymOwner.objects.get_or_create(user=user)
 
                 # Assign the user as a manager to the gym
-                gym = verification_token.gym
                 GymOwnership.objects.create(gym=gym, owner=gym_owner, role='manager')
 
                 # Mark the token as used
@@ -534,7 +562,6 @@ def register_manager(request):
         else:
             # Invalid form
             messages.error(request, "Please correct the errors below.")
-
     else:
         form = ManagerRegistrationForm()
 
@@ -562,3 +589,5 @@ def delete_gym(request, slug):
 
     # Redirect back if the method is not POST
     return redirect('gym_settings', slug=slug)
+
+

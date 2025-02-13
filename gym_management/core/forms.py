@@ -138,3 +138,26 @@ class ManagerRegistrationForm(forms.Form):
         # Convert email to lowercase
         email = self.cleaned_data.get("email")
         return email.lower() if email else email    
+    
+
+
+# Form for adding a new gym
+class GymCreationForm(forms.ModelForm):
+    class Meta:
+        model = Gym
+        fields = ['name', 'address', 'contact_number', 'email', 'email_domain']  # Include fields to create a gym
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Optional: Add custom styling or validation to the form fields if needed
+        self.fields['name'].widget.attrs.update({'placeholder': 'Enter Gym Name'})
+        self.fields['contact_number'].widget.attrs.update({'placeholder': 'Enter Gym Contact Number'})
+        self.fields['email'].widget.attrs.update({'placeholder': 'Enter Gym Email (optional)'})
+        self.fields['email_domain'].widget.attrs.update({'placeholder': 'Enter Custom Email Domain (optional)'})
+    
+    def save(self, *args, **kwargs):
+        # When saving, don't commit the owner as it will be handled manually in the view
+        gym = super().save(commit=False)
+        gym.save()  # Save the gym without owners first
+        return gym
